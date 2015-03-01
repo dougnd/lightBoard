@@ -86,7 +86,7 @@ class Master:
         self.loadProgram(0)
 
     def loadProgram(self, index):
-        print 'loading ' + str(self.allPrograms[index])
+        #print 'loading ' + str(self.allPrograms[index])
         self.currentProgramIndex = index
         currentProgramModule = __import__('programs.' +
                                           self.allPrograms[index][1],
@@ -96,6 +96,8 @@ class Master:
                                self.allPrograms[index][2])
         self.currentProgram = programClass(allLights)
         self.currentProgram.reset()
+        print "------------------"
+        print self.allPrograms[index][0]
         #self.currentProgramModule.setAllLights(allLights)
 
     def btn(self,number):
@@ -170,7 +172,7 @@ class Master:
         print "Done with pin initialization!"
 
         from ola.ClientWrapper import ClientWrapper
-        self.dmxArray = array.array('B', [0]*50)
+        self.dmxArray = array.array('B', [0]*100)
 
 
 
@@ -179,32 +181,31 @@ class Master:
 
 
         try:
-            wrapper = None
-            TICK_INTERVAL = 25 # ms
+            import usb.core
+            import usb.util
 
-            def DmxSent(state):
-                if not state.Succeeded():
-                    print "DMX Error!"
-                    wrapper.Stop()
+# udmx stuff:
+            dev = usb.core.find(idVendor=0x16C0, idProduct=0x05DC)
 
-            frameCntAndTime = [0, time.time()]
-            def UpdateDMX():
-                wrapper.AddEvent(TICK_INTERVAL, UpdateDMX)
-                if (time.time() - frameCntAndTime[1] > 5):
-                    print 'FPS: ' + str(frameCntAndTime[0]/(time.time()-frameCntAndTime[1]))
-                    frameCntAndTime[0] = 0
-                    frameCntAndTime[1] = time.time()
-                frameCntAndTime[0] += 1
+            if dev is None:
+                raise ValueError('Device not found')
 
+            udmxSetChannelRange = 2
+            bmRequestType = 0x40
+            targetFps = 24.0
+            t = time.time()
+
+            while True:
                 for name, l in allLights.items():
                     l['light'].update()
-                wrapper.Client().SendDmx(1, self.dmxArray, DmxSent)
 
-            wrapper = ClientWrapper()
-            wrapper.AddEvent(TICK_INTERVAL, UpdateDMX)
+                dev.ctrl_transfer(bmRequestType, udmxSetChannelRange,
+                        len(self.dmxArray), 0, self.dmxArray)
 
-            print "Ready."
-            wrapper.Run()
+                wait = 1.0/targetFps - time.time()+t
+                if wait > 0:
+                    time.sleep(wait)
+                t = time.time()
 
         except Exception:
             GPIO.cleanup()

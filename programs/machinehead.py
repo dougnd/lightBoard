@@ -5,10 +5,9 @@ import time
 
 class MachineheadProgram(common.Program):
     def reset(self):
-        print "reset called"
         self.firstIntro = True
-        self.lastn = -1
-        self.lastBPMUpdate = time.time()
+        self.lastn = 0
+        self.lastbpmupdate = time.time()
         self.bpm = 113
         self.spb = 60.0 / self.bpm
 

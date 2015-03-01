@@ -2,7 +2,7 @@ import common, math, lights, random, time
 
 class HitController(lights.BasicController):
     def __init__(self, controller):
-        self.fadeTime = .6
+        self.fadeTime = .1
         self.controller = controller
         self.hits = 3
         self.pre_hit_time = -1e5
