@@ -54,14 +54,25 @@ class BasicProgram(common.Program):
         for name, l in self.allLights.items():
             l['light'].setController(redLight())
 
+    def test(self):
+        self.allLights['frontSpencer']['light'].setController(lights.getRGBSequenceController([
+            ((0,0,0), 1.0),
+            ((255,0,0), 1.0),
+            ((0,255,0), 1.0),
+            ((0,255,0), 1.0),
+            ((0,0,255), 1.0),
+            ((255,0,255), 1.0),
+        ]))
+
     def buttonPressed(self, n):
         print 'btn idx ' + str(n) + 'pressed'
 
         btnmap = {0: self.blue,
                 1: self.red,
-                2: self.green}
+                2: self.green,
+                3: self.test}
 
         try:
             btnmap[n]()
-        except Exception:
+        except KeyError:
             pass

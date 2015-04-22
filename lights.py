@@ -1,5 +1,10 @@
 import time, math
 
+def mixColors(c1,c2, fraction):
+    return (fraction*c1[0] + (1-fraction)*c2[0],
+            fraction*c1[1] + (1-fraction)*c2[1],
+            fraction*c1[2] + (1-fraction)*c2[2])
+
 # Light types:
 class BasicLight:
     def setController(self, controller):
@@ -83,8 +88,8 @@ class SineRGBController(BasicController):
         self.b = b
         self.start_time = time.time()
 
-    def reset(self):
-        self.start_time = time.time()
+    def reset(self, t=time.time()):
+        self.start_time = t
 
     def getRGB(self):
         t = time.time() - self.start_time
@@ -103,8 +108,8 @@ class StrobeController(BasicController):
         self.period = period
         self.start_time = time.time()
 
-    def reset(self):
-        self.start_time = time.time()
+    def reset(self, t=time.time()):
+        self.start_time = t
 
     def getRGB(self):
         t = time.time() - self.start_time
@@ -127,10 +132,6 @@ class FadeInController(BasicController):
 
     def getRGB(self):
         t = time.time() - self.start_time
-        def mixColors(c1,c2, fraction):
-            return (fraction*c1[0] + (1-fraction)*c2[0],
-                    fraction*c1[1] + (1-fraction)*c2[1],
-                    fraction*c1[2] + (1-fraction)*c2[2])
 
         if t > self.fadeTime:
             return self.newController.getRGB()
@@ -139,4 +140,57 @@ class FadeInController(BasicController):
                              self.lastRGB,
                              t/self.fadeTime)
 
+class FadeController(BasicController):
+    def __init__(self, startColor, endColor, fadeTime):
+        self.fadeTime = fadeTime
+        self.startColor = startColor
+        self.endColor = endColor
+        self.start_time = time.time()
+
+    def reset(self, t=time.time()):
+        self.start_time = t
+
+    def getRGB(self):
+        t = time.time() - self.start_time
+
+        if t > self.fadeTime:
+            return self.endColor
+        else:
+            return mixColors(self.endColor,
+                             self.startColor,
+                             t/self.fadeTime)
+
+class SeqencerController(BasicController):
+    def __init__(self, controllers):
+        self.controllers = controllers
+        self.start_time = time.time()
+        tm = self.start_time
+        for controller, period in self.controllers:
+            controller.reset(tm)
+            tm+=period
+
+    def reset(self, t=time.time()):
+        self.start_time = t
+        tm = self.start_time
+        for controller, period in self.controllers:
+            controller.reset(tm)
+            tm+=period
+
+    def getRGB(self):
+        t = time.time() - self.start_time
+        for controller, period in self.controllers:
+            t -= period
+            if t < 0:
+                return controller.getRGB()
+        return self.controllers[-1][0].getRGB()
+
+def getRGBSequenceController(colors):
+    #import ipdb; ipdb.set_trace()
+    controllers = []
+    for i in range(len(colors)-1):
+        controllers.append((
+            FadeController(colors[i][0], colors[i+1][0], colors[i][1]),
+            colors[i][1]
+        ))
+    return SeqencerController(controllers)
 

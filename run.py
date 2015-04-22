@@ -27,6 +27,21 @@ allLights = {
         'simX': 210,
         'simY': 100
     },
+    'backDoug': {
+        'light': lights.DMXPar(3),
+        'simX': 260,
+        'simY': 130
+    },
+    'backTravis': {
+        'light': lights.DMXPar(3),
+        'simX': 175,
+        'simY': 310
+    },
+    'frontLeftMagic': {
+        'light': lights.DMXMagic(3),
+        'simX': 50,
+        'simY': 10
+    },
     'frontLeft': {
         'light': lights.DMXPar(3),
         'simX': 10,
@@ -77,6 +92,7 @@ class Master:
         programClass = getattr(currentProgramModule,
                                self.allPrograms[index][2])
         self.currentProgram = programClass(allLights)
+        self.currentProgram.reset()
         #self.currentProgramModule.setAllLights(allLights)
 
     def btn(self,number):
@@ -91,6 +107,7 @@ class Master:
         self.loadProgram((self.currentProgramIndex-1)%len(self.allPrograms))
 
     def darkBtn(self):
+        self.currentProgram.reset()
         for name, l in allLights.items():
             l['light'].setController(lights.FadeInController(
                 lights.ConstantRGBController(0,0,0), 0.1
@@ -157,7 +174,7 @@ class Master:
         for name, l in allLights.items():
             w = Label(lightFrame, text="  ", bg="black")
             l['light'].setSimWidget(w)
-            w.place(x=l['simX'], y=l['simY'])
+            w.place(x=l['simX'], y=350-l['simY'])
 
         def update():
             for name, l in allLights.items():
