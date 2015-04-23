@@ -6,7 +6,7 @@ import time
 class MachineheadProgram(common.Program):
     def reset(self):
         self.firstIntro = True
-        self.lastn = 0
+        self.lastn = -1
         self.btnCount = 0
         self.lastBPMUpdate = time.time()
         self.bpm = 113
