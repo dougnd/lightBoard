@@ -1,6 +1,6 @@
 # lightBoard
 
-The code for [Out of Artifice's](outofartifice.com) lighting control board.
+The code for [Out of Artifice's](http://outofartifice.com) lighting control board.
 
 ## Usage
 

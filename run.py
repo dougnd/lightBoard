@@ -11,67 +11,67 @@ import array
 
 allLights = {
     'frontSpencer': {
-        'light': lights.DMXPar(0),
+        'light': lights.DMXPar(1),
         'simX': 160,
         'simY': 50
     },
     'frontTanner': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(7),
         'simX': 210,
         'simY': 50
     },
     'backSpencer': {
-        'light': lights.DMXPar(100),
+        'light': lights.DMXPar(37),
         'simX': 160,
         'simY': 100
     },
     'backTanner': {
-        'light': lights.DMXPar(103),
+        'light': lights.DMXPar(40),
         'simX': 210,
         'simY': 100
     },
     'backDoug': {
-        'light': lights.DMXPar(106),
+        'light': lights.DMXPar(43),
         'simX': 260,
         'simY': 130
     },
     'backTravis': {
-        'light': lights.DMXPar(109),
+        'light': lights.DMXPar(46),
         'simX': 175,
         'simY': 310
     },
     'frontLeftMagic': {
-        'light': lights.DMXMagic(12),
+        'light': lights.DMXMagic(53),
         'simX': 50,
         'simY': 10
     },
     'frontLeft': {
-        'light': lights.DMXPar(6),
+        'light': lights.DMXPar(4),
         'simX': 10,
         'simY': 10
     },
     'frontRight': {
-        'light': lights.DMXPar(9),
+        'light': lights.DMXPar(10),
         'simX': 360,
         'simY': 10
     },
     'rear1': {
-        'light': lights.DMXPar(112),
+        'light': lights.DMXPar(13),
         'simX': 100,
         'simY': 340
     },
     'rear2': {
-        'light': lights.DMXPar(115),
+        'light': lights.DMXPar(19),
         'simX': 150,
         'simY': 340
     },
     'rear3': {
-        'light': lights.DMXPar(118),
+        'light': lights.DMXPar(25),
         'simX': 200,
         'simY': 340
     },
     'rear4': {
-        'light': lights.DMXPar(121),
+        'light': lights.DMXPar(31),
         'simX': 250,
         'simY': 340
     },
@@ -182,6 +182,7 @@ class Master:
 
         from ola.ClientWrapper import ClientWrapper
         self.dmxArray = array.array('B', [0]*100)
+        self.dmxArray[0] = 255 # needed for spencer's second 4channel front light
 
 
 
@@ -204,6 +205,7 @@ class Master:
             targetFps = 24.0
             t = time.time()
 
+            print "Ready."
             while True:
                 for name, l in allLights.items():
                     l['light'].update()
