@@ -7,7 +7,8 @@ class MachineheadProgram(common.Program):
     def reset(self):
         self.firstIntro = True
         self.lastn = 0
-        self.lastbpmupdate = time.time()
+        self.btnCount = 0
+        self.lastBPMUpdate = time.time()
         self.bpm = 113
         self.spb = 60.0 / self.bpm
 
