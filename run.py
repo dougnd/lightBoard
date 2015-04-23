@@ -148,26 +148,35 @@ class Master:
                     self.callback()
                 self.lastEventTime = time.time()
 
-        def setupPin(p, callback):
+        def setupPins(pins):
+            # build node script to set pin direction:
             mux = 7
             pud = "pulldown"
-            script = "var b = require('bonescript'); b.pinMode('%s',b.INPUT,%i,'%s','fast');" % (p, mux, pud)
+            script = "var b = require('bonescript');"
+            for (p, _) in pins:
+                script += " b.pinMode('%s',b.INPUT,%i,'%s','fast');" % (p, mux, pud)
             command = ["node", "-e", script]
             subprocess.call(command, cwd="/usr/local/lib")
-            GPIO.setup(p, GPIO.IN)
-            GPIO.add_event_detect(p, GPIO.BOTH)
-            GPIO.add_event_callback(p, ButtonHandler(p, callback).handler)
+
+            # now use adafruit python lib
+            for (p, callback) in pins:
+                GPIO.setup(p, GPIO.IN)
+                GPIO.add_event_detect(p, GPIO.BOTH)
+                GPIO.add_event_callback(p, ButtonHandler(p, callback).handler)
+
 
         print "Doing pin initialization..."
-        setupPin("P8_15", self.prevProgram)
-        setupPin("P8_16", self.nextProgram)
-        setupPin("P8_17", self.frontBtn)
-        setupPin("P8_18", self.darkBtn)
-        setupPin("P8_9", lambda : self.btn(0))
-        setupPin("P8_10", lambda : self.btn(1))
-        setupPin("P8_11", lambda : self.btn(2))
-        setupPin("P8_12", lambda : self.btn(3))
-        setupPin("P8_14", lambda : self.btn(4))
+        setupPins([
+            ("P8_15", self.prevProgram),
+            ("P8_16", self.nextProgram),
+            ("P8_17", self.frontBtn),
+            ("P8_18", self.darkBtn),
+            ("P8_9", lambda : self.btn(0)),
+            ("P8_10", lambda : self.btn(1)),
+            ("P8_11", lambda : self.btn(2)),
+            ("P8_12", lambda : self.btn(3)),
+            ("P8_14", lambda : self.btn(4))
+        ])
 
         print "Done with pin initialization!"
 
