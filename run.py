@@ -1,6 +1,9 @@
 import lights
 import programs
 import sys
+import subprocess
+import time
+import array
 #import pkgutil
 #import ipdb as pdb
 #import time
@@ -18,57 +21,57 @@ allLights = {
         'simY': 50
     },
     'backSpencer': {
-        'light': lights.DMXPar(0),
+        'light': lights.DMXPar(100),
         'simX': 160,
         'simY': 100
     },
     'backTanner': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(103),
         'simX': 210,
         'simY': 100
     },
     'backDoug': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(106),
         'simX': 260,
         'simY': 130
     },
     'backTravis': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(109),
         'simX': 175,
         'simY': 310
     },
     'frontLeftMagic': {
-        'light': lights.DMXMagic(3),
+        'light': lights.DMXMagic(12),
         'simX': 50,
         'simY': 10
     },
     'frontLeft': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(6),
         'simX': 10,
         'simY': 10
     },
     'frontRight': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(9),
         'simX': 360,
         'simY': 10
     },
     'rear1': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(112),
         'simX': 100,
         'simY': 340
     },
     'rear2': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(115),
         'simX': 150,
         'simY': 340
     },
     'rear3': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(118),
         'simX': 200,
         'simY': 340
     },
     'rear4': {
-        'light': lights.DMXPar(3),
+        'light': lights.DMXPar(121),
         'simX': 250,
         'simY': 340
     },
@@ -127,6 +130,88 @@ class Master:
     def getProgramName(self):
         return self.allPrograms[self.currentProgramIndex][0]
 
+
+    def runReal(self):
+        import Adafruit_BBIO.GPIO as GPIO
+        class ButtonHandler:
+            def __init__(self, pin, callback):
+                self.pin = pin
+                self.lastEventTime = 0
+                self.debounceTime = .1
+                self.callback = callback
+
+            def handler(self, x):
+                if GPIO.input(x) and time.time() - self.lastEventTime > self.debounceTime:
+                    #print self.pin + ' was pressed!'
+                    self.callback()
+                self.lastEventTime = time.time()
+
+        def setupPin(p, callback):
+            mux = 7
+            pud = "pulldown"
+            script = "var b = require('bonescript'); b.pinMode('%s',b.INPUT,%i,'%s','fast');" % (p, mux, pud)
+            command = ["node", "-e", script]
+            subprocess.call(command, cwd="/usr/local/lib")
+            GPIO.setup(p, GPIO.IN)
+            GPIO.add_event_detect(p, GPIO.BOTH)
+            GPIO.add_event_callback(p, ButtonHandler(p, callback).handler)
+
+        print "Doing pin initialization..."
+        setupPin("P8_15", self.prevProgram)
+        setupPin("P8_16", self.nextProgram)
+        setupPin("P8_17", self.frontBtn)
+        setupPin("P8_18", self.darkBtn)
+        setupPin("P8_9", lambda : self.btn(0))
+        setupPin("P8_10", lambda : self.btn(1))
+        setupPin("P8_11", lambda : self.btn(2))
+        setupPin("P8_12", lambda : self.btn(3))
+        setupPin("P8_14", lambda : self.btn(4))
+
+        print "Done with pin initialization!"
+
+        from ola.ClientWrapper import ClientWrapper
+        self.dmxArray = array.array('B', [0]*50)
+
+
+
+        for name, l in allLights.items():
+            l['light'].dmxArray = self.dmxArray
+
+
+        try:
+            wrapper = None
+            TICK_INTERVAL = 25 # ms
+
+            def DmxSent(state):
+                if not state.Succeeded():
+                    print "DMX Error!"
+                    wrapper.Stop()
+
+            frameCntAndTime = [0, time.time()]
+            def UpdateDMX():
+                wrapper.AddEvent(TICK_INTERVAL, UpdateDMX)
+                if (time.time() - frameCntAndTime[1] > 5):
+                    print 'FPS: ' + str(frameCntAndTime[0]/(time.time()-frameCntAndTime[1]))
+                    frameCntAndTime[0] = 0
+                    frameCntAndTime[1] = time.time()
+                frameCntAndTime[0] += 1
+
+                for name, l in allLights.items():
+                    l['light'].update()
+                wrapper.Client().SendDmx(1, self.dmxArray, DmxSent)
+
+            wrapper = ClientWrapper()
+            wrapper.AddEvent(TICK_INTERVAL, UpdateDMX)
+
+            print "Ready."
+            wrapper.Run()
+
+        except Exception:
+            GPIO.cleanup()
+            raise
+
+
+
     def runSim(self):
         import Tkinter
         from Tkinter import Tk, Button, Frame, Label
@@ -183,5 +268,7 @@ class Master:
         update()
         root.mainloop()
 
-if sys.argv[1] == 'sim':
+if len(sys.argv) > 1 and sys.argv[1] == 'sim':
     Master().runSim()
+else:
+    Master().runReal()

@@ -29,6 +29,7 @@ class DMXPar(BasicLight):
         self.addr = dmxAddr
         self.controller = BasicController()
         self.simWidget = None
+        self.dmxArray = None
 
     def update(self):
         color = self.clampTuple(self.controller.getRGB())
@@ -38,6 +39,11 @@ class DMXPar(BasicLight):
             print ("Setting par light (" + str(self.addr) +
                    ") to (r,g,b) = " + str(color))
             """
+        if self.dmxArray:
+            if (self.addr+3 < len(self.dmxArray)):
+                self.dmxArray[self.addr] = int(color[0])
+                self.dmxArray[self.addr+1] = int(color[1])
+                self.dmxArray[self.addr+2] = int(color[2])
 
 
 class DMXMagic(BasicLight):
