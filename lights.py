@@ -46,6 +46,35 @@ class DMXPar(BasicLight):
                 self.dmxArray[self.addr+2] = int(color[2])
 
 
+class DMXPar7Ch(DMXPar):
+    def update(self):
+        color = self.clampTuple(self.controller.getRGB())
+        if self.simWidget:
+            self.simWidget.configure(bg='#%02x%02x%02x' % color)
+        if self.dmxArray:
+            if (self.addr+7 < len(self.dmxArray)):
+                self.dmxArray[self.addr] = 255 # dimmer
+                self.dmxArray[self.addr+1] = 0 # strobe
+                self.dmxArray[self.addr+2] = 0 # function
+                self.dmxArray[self.addr+3] = 0 # speed
+                self.dmxArray[self.addr+4] = int(color[0])
+                self.dmxArray[self.addr+5] = int(color[1])
+                self.dmxArray[self.addr+6] = int(color[2])
+
+class DMXPar6Ch(DMXPar):
+    def update(self):
+        color = self.clampTuple(self.controller.getRGB())
+        if self.simWidget:
+            self.simWidget.configure(bg='#%02x%02x%02x' % color)
+        if self.dmxArray:
+            if (self.addr+6 < len(self.dmxArray)):
+                self.dmxArray[self.addr] = 255 # dimmer
+                self.dmxArray[self.addr+1] = int(color[1])
+                self.dmxArray[self.addr+2] = int(color[0])
+                self.dmxArray[self.addr+3] = int(color[2])
+                self.dmxArray[self.addr+4] = 0 # function
+                self.dmxArray[self.addr+5] = 0 # speed
+
 class DMXMagic(BasicLight):
     def __init__(self, dmxAddr):
         self.addr = dmxAddr
@@ -54,7 +83,7 @@ class DMXMagic(BasicLight):
 
     def update(self):
         color = self.clampTuple(self.controller.getRGB())
-        #speed = self.controller.getSpeed()
+        speed = self.controller.getSpeed()
         if self.simWidget:
             self.simWidget.configure(bg='#%02x%02x%02x' % color)
             """
@@ -62,6 +91,15 @@ class DMXMagic(BasicLight):
                    ") to (r,g,b) = " + str(color) +
                    ", and speed = " + str(speed))
             """
+        if self.dmxArray:
+            if (self.addr+7 < len(self.dmxArray)):
+                self.dmxArray[self.addr] = 255 # dimmer
+                self.dmxArray[self.addr+1] = int(color[0])
+                self.dmxArray[self.addr+2] = int(color[1])
+                self.dmxArray[self.addr+3] = int(color[2])
+                self.dmxArray[self.addr+4] = 0 # strobe
+                self.dmxArray[self.addr+5] = speed # speed
+                self.dmxArray[self.addr+6] = 0 # function
 
 
 # Controllers:
@@ -71,6 +109,9 @@ class BasicController:
 
     def getSpeed(self):
         return 0
+
+    def reset(self, t=None):
+        pass
 
     def setPreviousController(self, c):
         pass
@@ -94,7 +135,9 @@ class SineRGBController(BasicController):
         self.b = b
         self.start_time = time.time()
 
-    def reset(self, t=time.time()):
+    def reset(self, t=None):
+        if t is None:
+            t = time.time()
         self.start_time = t
 
     def getRGB(self):
@@ -114,7 +157,9 @@ class StrobeController(BasicController):
         self.period = period
         self.start_time = time.time()
 
-    def reset(self, t=time.time()):
+    def reset(self, t=None):
+        if t is None:
+            t = time.time()
         self.start_time = t
 
     def getRGB(self):
@@ -153,7 +198,9 @@ class FadeController(BasicController):
         self.endColor = endColor
         self.start_time = time.time()
 
-    def reset(self, t=time.time()):
+    def reset(self, t=None):
+        if t is None:
+            t = time.time()
         self.start_time = t
 
     def getRGB(self):
@@ -166,16 +213,19 @@ class FadeController(BasicController):
                              self.startColor,
                              t/self.fadeTime)
 
-class SeqencerController(BasicController):
-    def __init__(self, controllers):
+class SequenceController(BasicController):
+    def __init__(self, controllers, loop=False):
         self.controllers = controllers
         self.start_time = time.time()
+        self.loop = loop
         tm = self.start_time
         for controller, period in self.controllers:
             controller.reset(tm)
             tm+=period
 
-    def reset(self, t=time.time()):
+    def reset(self, t=None):
+        if t is None:
+            t = time.time()
         self.start_time = t
         tm = self.start_time
         for controller, period in self.controllers:
@@ -188,6 +238,8 @@ class SeqencerController(BasicController):
             t -= period
             if t < 0:
                 return controller.getRGB()
+        if self.loop:
+            self.reset(time.time())
         return self.controllers[-1][0].getRGB()
 
 def getRGBSequenceController(colors):
@@ -198,5 +250,15 @@ def getRGBSequenceController(colors):
             FadeController(colors[i][0], colors[i+1][0], colors[i][1]),
             colors[i][1]
         ))
-    return SeqencerController(controllers)
+    return SequenceController(controllers)
+
+def getChaseControllers(n, onDuration, onColor, offColor):
+    controllers = []
+    for i in range(n):
+        controllers.append(SequenceController([
+            (ConstantRGBController(*offColor), i*onDuration),
+            (ConstantRGBController(*onColor), onDuration),
+            (ConstantRGBController(*offColor), (n-i-1)*onDuration),
+            ], True))
+    return controllers
 

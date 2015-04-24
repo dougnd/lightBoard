@@ -36,7 +36,7 @@ allLights = {
         'simY': 130
     },
     'backTravis': {
-        'light': lights.DMXPar(46),
+        'light': lights.DMXPar7Ch(46),
         'simX': 175,
         'simY': 310
     },
@@ -56,22 +56,22 @@ allLights = {
         'simY': 10
     },
     'rear1': {
-        'light': lights.DMXPar(13),
+        'light': lights.DMXPar6Ch(13),
         'simX': 100,
         'simY': 340
     },
     'rear2': {
-        'light': lights.DMXPar(19),
+        'light': lights.DMXPar6Ch(19),
         'simX': 150,
         'simY': 340
     },
     'rear3': {
-        'light': lights.DMXPar(25),
+        'light': lights.DMXPar6Ch(25),
         'simX': 200,
         'simY': 340
     },
     'rear4': {
-        'light': lights.DMXPar(31),
+        'light': lights.DMXPar6Ch(31),
         'simX': 250,
         'simY': 340
     },

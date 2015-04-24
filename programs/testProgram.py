@@ -15,9 +15,13 @@ class TestProgram(common.Program):
                 (1,2.0*math.pi/3.0, 1e6, 0),
                 (1,4.0*math.pi/3.0, 1e6, 0)))
     def strobe(self):
+        lightNames = ['frontSpencer', 'frontLeft', 'frontLeftMagic']
+        n = len(self.allLights)
+        controllers = lights.getChaseControllers(n, .25, (255,255,255), (0,0,0))
+        i=0
         for name, l in self.allLights.items():
-            l['light'].setController(lights.StrobeController(
-                .05, (255,255,255), (0,0,0)))
+            l['light'].setController(controllers[i])
+            i+=1
 
     def buttonPressed(self, n):
         print 'btn idx ' + str(n) + 'pressed'
@@ -28,10 +32,7 @@ class TestProgram(common.Program):
                 3: self.cycle2,
                 4: self.strobe}
 
-        try:
-            btnmap[n]()
-        except Exception:
-            pass
+        btnmap[n]()
     """
 allLights = {}
 
