@@ -10,6 +10,16 @@ import array
 
 
 allLights = {
+    'frontLeftMagic': {
+        'light': lights.DMXMagic(53),
+        'simX': 50,
+        'simY': 10
+    },
+    'frontLeft': {
+        'light': lights.DMXPar(4),
+        'simX': 10,
+        'simY': 10
+    },
     'frontSpencer': {
         'light': lights.DMXPar(1),
         'simX': 160,
@@ -19,6 +29,11 @@ allLights = {
         'light': lights.DMXPar(7),
         'simX': 210,
         'simY': 50
+    },
+    'frontRight': {
+        'light': lights.DMXPar(10),
+        'simX': 360,
+        'simY': 10
     },
     'backSpencer': {
         'light': lights.DMXPar(37),
@@ -40,21 +55,6 @@ allLights = {
         'simX': 175,
         'simY': 310
     },
-    'frontLeftMagic': {
-        'light': lights.DMXMagic(53),
-        'simX': 50,
-        'simY': 10
-    },
-    'frontLeft': {
-        'light': lights.DMXPar(4),
-        'simX': 10,
-        'simY': 10
-    },
-    'frontRight': {
-        'light': lights.DMXPar(10),
-        'simX': 360,
-        'simY': 10
-    },
     'rear1': {
         'light': lights.DMXPar6Ch(13),
         'simX': 100,
@@ -74,7 +74,7 @@ allLights = {
         'light': lights.DMXPar6Ch(31),
         'simX': 250,
         'simY': 340
-    },
+    }
 }
 
 
@@ -84,6 +84,7 @@ class Master:
         self.currentProgram = None
         self.currentProgramIndex = 0
         self.loadProgram(0)
+        self.lastFrontPress = 0
 
     def loadProgram(self, index):
         #print 'loading ' + str(self.allPrograms[index])
@@ -112,6 +113,7 @@ class Master:
         self.loadProgram((self.currentProgramIndex-1)%len(self.allPrograms))
 
     def darkBtn(self):
+        print "Dark"
         self.currentProgram.reset()
         for name, l in allLights.items():
             l['light'].setController(lights.FadeInController(
@@ -119,7 +121,14 @@ class Master:
             ))
 
     def frontBtn(self):
-        frontLights = ['frontSpencer', 'frontTanner', 'frontLeft', 'frontRight']
+        if time.time() - self.lastFrontPress > 1.0:
+            print "Front Spencer"
+            frontLights = ['frontSpencer']
+        else:
+            print "All Front"
+            frontLights = ['frontSpencer', 'frontTanner', 'frontLeft', 'frontRight']
+
+        self.lastFrontPress = time.time()
         for name, l in allLights.items():
             l['light'].setController(lights.FadeInController(
                 lights.ConstantRGBController(0,0,0), 0.1
@@ -180,11 +189,8 @@ class Master:
 
         print "Done with pin initialization!"
 
-        from ola.ClientWrapper import ClientWrapper
         self.dmxArray = array.array('B', [0]*100)
         self.dmxArray[0] = 255 # needed for spencer's second 4channel front light
-
-
 
         for name, l in allLights.items():
             l['light'].dmxArray = self.dmxArray
@@ -195,28 +201,35 @@ class Master:
             import usb.util
 
 # udmx stuff:
-            dev = usb.core.find(idVendor=0x16C0, idProduct=0x05DC)
 
-            if dev is None:
-                raise ValueError('Device not found')
-
-            udmxSetChannelRange = 2
-            bmRequestType = 0x40
-            targetFps = 24.0
-            t = time.time()
-
-            print "Ready."
             while True:
-                for name, l in allLights.items():
-                    l['light'].update()
+                try:
+                    dev = usb.core.find(idVendor=0x16C0, idProduct=0x05DC)
 
-                dev.ctrl_transfer(bmRequestType, udmxSetChannelRange,
-                        len(self.dmxArray), 0, self.dmxArray)
+                    if dev is None:
+                        raise ValueError('Device not found')
 
-                wait = 1.0/targetFps - time.time()+t
-                if wait > 0:
-                    time.sleep(wait)
-                t = time.time()
+                    udmxSetChannelRange = 2
+                    bmRequestType = 0x40
+                    targetFps = 24.0
+                    t = time.time()
+
+                    print "Ready."
+                    while True:
+                        for name, l in allLights.items():
+                            l['light'].update()
+
+                        dev.ctrl_transfer(bmRequestType, udmxSetChannelRange,
+                                len(self.dmxArray), 0, self.dmxArray)
+
+                        wait = 1.0/targetFps - time.time()+t
+                        if wait > 0:
+                            time.sleep(wait)
+                        t = time.time()
+                except (ValueError, usb.core.USBError):
+                    print "USB Error cannot find DMX controller!"
+                    time.sleep(1)
+                    print "Checking again..."
 
         except Exception:
             GPIO.cleanup()
