@@ -11,6 +11,10 @@ class MachineheadProgram(common.Program):
         self.lastBPMUpdate = time.time()
         self.bpm = 113
         self.spb = 60.0 / self.bpm
+        self.autoBtns = [
+                (1, 0.0),
+                (1, 4.2)
+                ]
 
     def updateBPM(self, beats):
         self.bpm = 60.0/(time.time() - self.lastBPMUpdate)*beats

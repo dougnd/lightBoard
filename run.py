@@ -85,6 +85,11 @@ class Master:
         self.currentProgramIndex = 0
         self.loadProgram(0)
         self.lastFrontPress = 0
+        self.auto = False
+
+
+    def setAutoMode(self, auto = True):
+        self.auto = auto
 
     def loadProgram(self, index):
         #print 'loading ' + str(self.allPrograms[index])
@@ -121,22 +126,25 @@ class Master:
             ))
 
     def frontBtn(self):
-        if time.time() - self.lastFrontPress > 1.0:
-            print "Front Spencer"
-            frontLights = ['frontSpencer']
+        if self.auto:
+            print "Running auto..."
         else:
-            print "All Front"
-            frontLights = ['frontSpencer', 'frontTanner', 'frontLeft', 'frontRight']
+            if time.time() - self.lastFrontPress > 1.0:
+                print "Front Spencer"
+                frontLights = ['frontSpencer']
+            else:
+                print "All Front"
+                frontLights = ['frontSpencer', 'frontTanner', 'frontLeft', 'frontRight']
 
-        self.lastFrontPress = time.time()
-        for name, l in allLights.items():
-            l['light'].setController(lights.FadeInController(
-                lights.ConstantRGBController(0,0,0), 0.1
-            ))
-        for l in frontLights:
-            allLights[l]['light'].setController(lights.FadeInController(
-                lights.ConstantRGBController(255,255,255), 0.3
-            ))
+            self.lastFrontPress = time.time()
+            for name, l in allLights.items():
+                l['light'].setController(lights.FadeInController(
+                    lights.ConstantRGBController(0,0,0), 0.1
+                ))
+            for l in frontLights:
+                allLights[l]['light'].setController(lights.FadeInController(
+                    lights.ConstantRGBController(255,255,255), 0.3
+                ))
 
     def getProgramName(self):
         return self.allPrograms[self.currentProgramIndex][0]
@@ -293,7 +301,13 @@ class Master:
         update()
         root.mainloop()
 
-if len(sys.argv) > 1 and sys.argv[1] == 'sim':
-    Master().runSim()
+
+m = Master()
+if 'auto' in sys.argv:
+    print "Auto mode!!"
+    m.setAutoMode()
+
+if 'sim' in sys.argv:
+    m.runSim()
 else:
-    Master().runReal()
+    m.runReal()
