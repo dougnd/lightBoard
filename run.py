@@ -4,6 +4,8 @@ import sys
 import subprocess
 import time
 import array
+import threading
+import pygame
 #import pkgutil
 #import ipdb as pdb
 #import time
@@ -86,10 +88,16 @@ class Master:
         self.loadProgram(0)
         self.lastFrontPress = 0
         self.auto = False
+        self.timeStamps = False
+        self.autoRunning = False
 
 
     def setAutoMode(self, auto = True):
         self.auto = auto
+
+    def setTimeStamps(self, ts = True):
+        self.timeStamps = ts
+        self.initTime = time.time()
 
     def loadProgram(self, index):
         #print 'loading ' + str(self.allPrograms[index])
@@ -108,6 +116,8 @@ class Master:
 
     def btn(self,number):
         #print "Button " + str(number) + " pressed"
+        if self.timeStamps:
+            print "B" + str(number) + " at " + str(time.time()-self.initTime)
         #testProgram.buttonPressed(number)
         self.currentProgram.buttonPressed(number)
 
@@ -119,6 +129,9 @@ class Master:
 
     def darkBtn(self):
         print "Dark"
+        # stop auto program if one is running
+        self.autoRunning = False
+
         self.currentProgram.reset()
         for name, l in allLights.items():
             l['light'].setController(lights.FadeInController(
@@ -127,7 +140,7 @@ class Master:
 
     def frontBtn(self):
         if self.auto:
-            print "Running auto..."
+            threading.Thread(target=self.runAuto).start()
         else:
             if time.time() - self.lastFrontPress > 1.0:
                 print "Front Spencer"
@@ -145,6 +158,31 @@ class Master:
                 allLights[l]['light'].setController(lights.FadeInController(
                     lights.ConstantRGBController(255,255,255), 0.3
                 ))
+
+    def runAuto(self):
+        print "Running auto..."
+        self.currentProgram.reset()
+        if not hasattr(self.currentProgram, 'autoBtns'):
+            print "program has no auto."
+            return
+        self.autoRunning = True
+        pygame.mixer.music.load('programs/audio/' + self.currentProgram.autoSong)
+        pygame.mixer.music.play()
+        startTime = time.time()
+        self.initTime = time.time()
+        for b in self.currentProgram.autoBtns:
+            while self.autoRunning and time.time()-startTime < b[1]:
+                time.sleep(0.01)
+            if not self.autoRunning:
+                pygame.mixer.music.stop()
+                return
+            if not self.timeStamps:
+                self.btn(b[0])
+
+        while self.autoRunning and pygame.mixer.music.get_busy():
+                time.sleep(0.01)
+        pygame.mixer.music.stop()
+
 
     def getProgramName(self):
         return self.allPrograms[self.currentProgramIndex][0]
@@ -272,13 +310,13 @@ class Master:
             self.nextProgram()
             pgmName.configure(text=str(self.currentProgramIndex) + ') ' +
                               self.getProgramName())
-            print self.getProgramName()
+            #print self.getProgramName()
 
         def onPrev():
             self.prevProgram()
             pgmName.configure(text=str(self.currentProgramIndex) + ') ' +
                               self.getProgramName())
-            print self.getProgramName()
+            #print self.getProgramName()
 
         pgmFrame = Frame(root)
         nxt = Button(pgmFrame, text="next", command=onNext)
@@ -319,10 +357,15 @@ class Master:
         root.mainloop()
 
 
+pygame.init()
+pygame.mixer.init()
 m = Master()
 if 'auto' in sys.argv:
     print "Auto mode!!"
     m.setAutoMode()
+
+if 'rec' in sys.argv:
+    m.setTimeStamps()
 
 if 'sim' in sys.argv:
     m.runSim()

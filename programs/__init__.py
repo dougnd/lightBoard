@@ -1,7 +1,7 @@
 programList = [
     # (<program name', <module name>)
-    ('Test Program', 'testProgram', 'TestProgram'),
     ('Machinehead', 'machinehead', 'MachineheadProgram'),
+    ('Test Program', 'testProgram', 'TestProgram'),
     ('I Am One', 'iamone', 'IAmOneProgram'),
     ('Basic', 'basicProgram', 'BasicProgram')
 ]
