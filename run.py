@@ -191,34 +191,21 @@ class Master:
     def runReal(self):
         import Adafruit_BBIO.GPIO as GPIO
         class ButtonHandler:
-            PressedUnstable, PressedStable, UnpressedUnstable, UnpressedStable = range(4)
             def __init__(self, pin, callback):
                 self.pin = pin
-                self.lastEventTime = 0
-                self.debounceTime = .2
                 self.callback = callback
                 self.state = 0
                 self.stateLock = threading.Lock()
 
             def handler(self, x):
-                print x + ':  ' + str(GPIO.input(x)) +   ' :   ' + str(time.time() - self.lastEventTime)
-
-                self.stateLock.acuire()
+                #print x + ':  ' + str(GPIO.input(x)) +   ' :   ' + str(time.time() - self.lastEventTime)
+                self.stateLock.acquire()
                 if self.state == 0 and GPIO.input(x) == 1:
-                    print x + " was pressed"
+                    #print x + " was pressed"
+                    self.callback()
                 self.state = GPIO.input(x)
                 self.stateLock.release()
 
-
-                """
-                if GPIO.input(x) and time.time() - self.lastEventTime > self.debounceTime:
-                    #print self.pin + ' was pressed!'
-                    self.callback()
-                if self.state = ButtonHandler.UnpressedStable and GPIO.input(x):
-                    self.state = ButtonHandler.PressedUnstable
-                """
-
-                self.lastEventTime = time.time()
 
         def setupPins(pins):
             # build node script to set pin direction:
