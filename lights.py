@@ -80,6 +80,7 @@ class DMXMagic(BasicLight):
         self.addr = dmxAddr
         self.controller = BasicController()
         self.simWidget = None
+        self.dmxArray = None
 
     def update(self):
         color = self.clampTuple(self.controller.getRGB())
