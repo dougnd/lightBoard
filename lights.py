@@ -117,6 +117,16 @@ class BasicController:
     def setPreviousController(self, c):
         pass
 
+class ConstantSpeedController(BasicController):
+    def __init__(self, speed, rgbcontroller):
+        self.rgbcontroller = rgbcontroller
+        self.speed = speed
+
+    def getSpeed(self):
+        return self.speed
+
+    def getRGB(self):
+        return self.rgbcontroller.getRGB()
 
 class ConstantRGBController(BasicController):
     def __init__(self, r, g, b):
