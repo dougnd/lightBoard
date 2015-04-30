@@ -46,7 +46,7 @@ class MachineheadProgram(common.Program):
     def intro(self, n):
         if not self.firstIntro and n == 1:
             self.updateBPM(8, False)
-        else: 
+        else:
             self.updateBPM(8, True)
 	if not self.firstIntro:
             n += 7
@@ -178,7 +178,7 @@ class MachineheadProgram(common.Program):
                         random.uniform(5,30), random.uniform(0,70))
                 ), 0.1
             )
-        self.setLights(['rear1', 'rear4', 'rear2', 'rear3', 'backTravis', 
+        self.setLights(['rear1', 'rear4', 'rear2', 'rear3', 'backTravis',
                         'backSpencer', 'backTanner', 'frontTanner', 'frontLeft',
                         'frontRight', 'backDoug'], redLight)
         self.setLights(['frontSpencer'], lambda: lights.FadeInController(
@@ -197,73 +197,96 @@ class MachineheadProgram(common.Program):
                         random.uniform(5,30), random.uniform(0,70))
                 ), 0.5
             )
-        def anyLight():
+        def orangeLight():
             return lights.FadeInController(
                 lights.SineRGBController(
                     (random.uniform(1,4), random.uniform(0,2*math.pi),
-                        random.uniform(50,200), random.uniform(0,255)),
+                        random.uniform(5,30), random.uniform(200,255)),
                     (random.uniform(1,4), random.uniform(0,2*math.pi),
-                        random.uniform(50,200), random.uniform(0,255)),
+                        random.uniform(5,30), random.uniform(100,150)),
                     (random.uniform(1,4), random.uniform(0,2*math.pi),
-                        random.uniform(50,200), random.uniform(0,255))
+                        random.uniform(5,30), random.uniform(0,50))
                 ), 0.4
             )
-        if self.firstChorus:
-            self.firstChorus = False
-            self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'], 
+        if self.firstChorus and n == 1:
+            self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'],
                         yellowLight)
             self.setLights(['frontSpencer'], lambda: lights.FadeInController(
                             lights.ConstantRGBController(100,100,255), 1.0))
             self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(128, lights.FadeInController(
                             lights.ConstantRGBController(0,0,255), 1.0)))
-            self.setLights(['frontTanner', 'frontLeft', 'frontRight', 'rear1', 
+            self.setLights(['frontTanner', 'frontLeft', 'frontRight', 'rear1',
                         'rear2', 'rear3', 'rear4'], lambda: lights.FadeInController(
                             lights.ConstantRGBController(0,0,0), 3.0))
-        else: 
-            self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'], 
-                        anyLight)
+        elif n == 2:
+            self.firstChorus = False
+            self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'],
+                        orangeLight)
             self.setLights(['frontSpencer'], lambda: lights.FadeInController(
                             lights.ConstantRGBController(255,255,255), 1.0))
             self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(200,
                             lights.FadeInController(
-                            lights.ConstantRGBController(255,255,255), 1.0)))
-            self.setLights(['frontTanner', 'frontLeft', 'frontRight', 'rear1', 
-                        'rear2', 'rear3', 'rear4'], anyLight)
+                            lights.ConstantRGBController(255,255,0), 1.0)))
+            self.setLights(['frontTanner', 'frontLeft', 'frontRight', 'rear1',
+                        'rear2', 'rear3', 'rear4'], orangeLight)
+        elif not self.firstChorus and n == 1:
+            self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'],
+                        yellowLight)
+            self.setLights(['frontSpencer'], lambda: lights.FadeInController(
+                            lights.ConstantRGBController(255,255,255), 1.0))
+            self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(128,
+                            lights.FadeInController(
+                            lights.ConstantRGBController(255,0,0), 1.0)))
+            self.setLights(['frontTanner', 'frontLeft', 'frontRight', 'rear1',
+                        'rear2', 'rear3', 'rear4'], yellowLight)
 
 
-    def endChorus(self, n):
-        def greenLight():
+    def solo(self, n):
+        def purpleLight():
             return lights.FadeInController(
                 lights.SineRGBController(
                     (random.uniform(0,2), random.uniform(0,2*math.pi),
-                        random.uniform(50,100), random.uniform(0,70)),
+                        random.uniform(50,100), random.uniform(180,255)),
                     (random.uniform(0,2), random.uniform(0,2*math.pi),
-                        random.uniform(5,70), random.uniform(180,255)),
+                        random.uniform(5,70), random.uniform(0,70)),
                     (random.uniform(0,2), random.uniform(0,2*math.pi),
-                        random.uniform(50,100), random.uniform(0,70))
+                        random.uniform(50,100), random.uniform(180,255))
                 ), 0.4
             )
-        self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'], 
-                    greenLight)
-        self.setLights(['frontSpencer'], lambda: lights.FadeInController(
-                        lights.ConstantRGBController(255,200,200), 1.0))
-        self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(0,
-                        lights.FadeInController(
-                        lights.ConstantRGBController(0,0,0), 1.0)))
-        self.setLights(['frontTanner', 'frontLeft', 'frontRight', 'rear1', 
-                    'rear2', 'rear3', 'rear4'], greenLight)
+
+        if n == 1:
+            self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'],
+                        purpleLight)
+            self.setLights(['frontSpencer','frontTanner', 'frontLeft', 'frontRight' ],
+                           lambda: lights.FadeInController(
+                            lights.ConstantRGBController(0,0,0), 1.0))
+            self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(128,
+                            lights.ConstantRGBController(255,0,0)))
+            self.setLights(['rear1',
+                        'rear2', 'rear3', 'rear4'], purpleLight)
+        else:
+            self.setLights(['backTravis', 'backDoug', 'backTanner', 'backSpencer'],
+                        purpleLight)
+            self.setLights(['frontSpencer','frontTanner', 'frontLeft', 'frontRight' ],
+                           lambda: lights.FadeInController(
+                            lights.ConstantRGBController(255,0,0), 1.0))
+            self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(128,
+                            lights.ConstantRGBController(255,0,0)))
+            self.setLights(['rear1',
+                        'rear2', 'rear3', 'rear4'], purpleLight)
+
 
     def outro(self, n):
-        self.setLightsExcept(['frontSpencer', 'backSpencer'],lambda: lights.FadeInController(lights.ConstantRGBController(0,0,0), .5))
+        self.setLightsExcept(['frontSpencer', 'backSpencer', 'backTanner'],lambda: lights.FadeInController(lights.ConstantRGBController(0,0,0), 2.0))
         if n == 1:
             self.setLights(['frontSpencer'], lambda: lights.FadeInController(lights.ConstantRGBController(255,255,255), .5))
-            self.setLights(['backSpencer'], lambda: lights.FadeInController(lights.ConstantRGBController(255,0,0), .5))
+            self.setLights(['backSpencer', 'backTanner'], lambda: lights.FadeInController(lights.ConstantRGBController(255,0,0), .5))
         if n == 2:
             self.setLights(['frontSpencer'], lambda: lights.FadeInController(lights.ConstantRGBController(0,0,0), 1.5))
-            self.setLights(['backSpencer'], lambda: lights.FadeInController(lights.ConstantRGBController(255,0,0), .5))
+            self.setLights(['backSpencer', 'backTanner'], lambda: lights.FadeInController(lights.ConstantRGBController(255,0,0), .5))
         if n == 3:
             self.setLights(['frontSpencer'], lambda: lights.FadeInController(lights.ConstantRGBController(0,0,0), .5))
-            self.setLights(['backSpencer'], lambda: lights.FadeInController(lights.ConstantRGBController(0,0,0), 1.5))
+            self.setLights(['backSpencer', 'backTanner'], lambda: lights.FadeInController(lights.ConstantRGBController(0,0,0), 1.5))
 
     def buttonPressed(self, n):
         if hasattr(self, 'lastn') and self.lastn == n:
@@ -278,7 +301,7 @@ class MachineheadProgram(common.Program):
         btnmap = {0: self.intro,
                   1: self.verse,
                   2: self.chorus,
-                  3: self.endChorus,
+                  3: self.solo,
                   4: self.outro}
 
         btnmap[n](self.btnCount)

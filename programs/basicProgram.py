@@ -2,6 +2,9 @@ import common, math, lights, random
 
 
 class BasicProgram(common.Program):
+    def reset(self):
+        self.lastn = -1
+
     def cycle(self):
         for name, l in self.allLights.items():
             l['light'].setController(lights.SineRGBController(
@@ -21,10 +24,10 @@ class BasicProgram(common.Program):
                         random.uniform(5,70), random.uniform(180,255))
                 ), 0.4
             )
-        if n == 1:
+        if n%2 == 1:
             self.setLightsExcept(['frontLeftMagic'], blueLight)
             self.setLights(['frontLeftMagic'], lambda: lights.BasicController())
-        if n == 2:
+        if n%2 == 0:
             self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(150, blueLight()))
 
     def green(self, n):
@@ -39,10 +42,10 @@ class BasicProgram(common.Program):
                         random.uniform(50,100), random.uniform(0,70))
                 ), 0.4
             )
-        if n == 1:
+        if n%2 == 1:
             self.setLightsExcept(['frontLeftMagic'], greenLight)
             self.setLights(['frontLeftMagic'], lambda: lights.BasicController())
-        if n == 2:
+        if n%2 == 0:
             self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(150, greenLight()))
 
     def red(self, n):
@@ -57,10 +60,10 @@ class BasicProgram(common.Program):
                         random.uniform(5,30), random.uniform(0,70))
                 ), 0.1
             )
-        if n == 1:
+        if n%2 == 1:
             self.setLightsExcept(['frontLeftMagic'], redLight)
             self.setLights(['frontLeftMagic'], lambda: lights.BasicController())
-        if n == 2:
+        if n%2 == 0:
             self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(150, redLight()))
 
     def yellow(self, n):
@@ -75,14 +78,18 @@ class BasicProgram(common.Program):
                         random.uniform(5,30), random.uniform(0,70))
                 ), 0.1
             )
-        if n == 1:
+        if n%2 == 1:
             self.setLightsExcept(['frontLeftMagic'], yellowLight)
             self.setLights(['frontLeftMagic'], lambda: lights.BasicController())
-        if n == 2:
+        if n%2 == 0:
             self.setLights(['frontLeftMagic'], lambda: lights.ConstantSpeedController(150, yellowLight()))
 
-    def outro(self, n):
-        pass
+    def special(self, n):
+        if n%2 == 1:
+            self.lastSpencerController = self.allLights['frontSpencer']['light'].controller
+            self.setLights(['frontSpencer'], lambda: lights.FadeInController(lights.ConstantRGBController(255,255,255),1.0))
+        else:
+            self.allLights['frontSpencer']['light'].controller = self.lastSpencerController
 
     def test(self):
         self.allLights['frontSpencer']['light'].setController(lights.getRGBSequenceController([
@@ -106,6 +113,6 @@ class BasicProgram(common.Program):
                 1: self.red,
                 2: self.green,
                 3: self.yellow,
-                4: self.outro}
+                4: self.special}
 
         btnmap[n](self.btnCount)
